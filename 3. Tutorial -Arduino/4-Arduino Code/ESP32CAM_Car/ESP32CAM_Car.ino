@@ -6,6 +6,7 @@
  */
 
 #include "esp_camera.h"
+#include "L298N.h"
 #include <WiFi.h>
 
 //
@@ -66,8 +67,10 @@ const char* password = "46436214";   //Enter WIFI Password
 #endif
 
 // GPIO Setting
+extern int gpLs =  16; // Left speed (PWM)
 extern int gpLb =  2; // Left 1
 extern int gpLf = 14; // Left 2
+extern int gpRs = 17; // Right speed (PWM)
 extern int gpRb = 15; // Right 1
 extern int gpRf = 13; // Right 2
 extern int gpLed =  4; // Light
@@ -80,18 +83,8 @@ void setup() {
   Serial.setDebugOutput(true);
   Serial.println();
 
-
-  pinMode(gpLb, OUTPUT); //Left Backward
-  pinMode(gpLf, OUTPUT); //Left Forward
-  pinMode(gpRb, OUTPUT); //Right Forward
-  pinMode(gpRf, OUTPUT); //Right Backward
+  //initialize LED
   pinMode(gpLed, OUTPUT); //Light
-
-  //initialize
-  digitalWrite(gpLb, LOW);
-  digitalWrite(gpLf, LOW);
-  digitalWrite(gpRb, LOW);
-  digitalWrite(gpRf, LOW);
   digitalWrite(gpLed, LOW);
 
   camera_config_t config;

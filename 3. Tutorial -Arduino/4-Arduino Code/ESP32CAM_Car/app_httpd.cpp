@@ -9,15 +9,16 @@
 #include "img_converters.h"
 #include "camera_index.h"
 #include "Arduino.h"
+#include "L298N.h"
 
+extern int gpLs;
 extern int gpLb;
 extern int gpLf;
+extern int gpRs;
 extern int gpRb;
 extern int gpRf;
 extern int gpLed;
 extern String WiFiAddr;
-
-void WheelAct(int nLf, int nLb, int nRf, int nRb);
 
 typedef struct {
         size_t size; //number of values used for filtering
@@ -299,61 +300,8 @@ static esp_err_t status_handler(httpd_req_t *req){
 
 static esp_err_t index_handler(httpd_req_t *req){
     httpd_resp_set_type(req, "text/html");
-    String page = "";
-     page += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0\">\n";
- page += "<script>var xhttp = new XMLHttpRequest();</script>";
- page += "<script>function getsend(arg) { xhttp.open('GET', arg +'?' + new Date().getTime(), true); xhttp.send() } </script>";
- //page += "<p align=center><IMG SRC='http://" + WiFiAddr + ":81/stream' style='width:280px;'></p><br/><br/>";
- page += "<p align=center><IMG SRC='http://" + WiFiAddr + ":81/stream' style='width:300px; transform:rotate(180deg);'></p><br/><br/>";
- 
- page += "<p align=center> <button style=background-color:lightgrey;width:90px;height:80px onmousedown=getsend('go') onmouseup=getsend('stop') ontouchstart=getsend('go') ontouchend=getsend('stop') ><b>Forward</b></button> </p>";
- page += "<p align=center>";
- page += "<button style=background-color:lightgrey;width:90px;height:80px; onmousedown=getsend('left') onmouseup=getsend('stop') ontouchstart=getsend('left') ontouchend=getsend('stop')><b>Left</b></button>&nbsp;";
- page += "<button style=background-color:indianred;width:90px;height:80px onmousedown=getsend('stop') onmouseup=getsend('stop')><b>Stop</b></button>&nbsp;";
- page += "<button style=background-color:lightgrey;width:90px;height:80px onmousedown=getsend('right') onmouseup=getsend('stop') ontouchstart=getsend('right') ontouchend=getsend('stop')><b>Right</b></button>";
- page += "</p>";
-
- page += "<p align=center><button style=background-color:lightgrey;width:90px;height:80px onmousedown=getsend('back') onmouseup=getsend('stop') ontouchstart=getsend('back') ontouchend=getsend('stop') ><b>Backward</b></button></p>";  
-
- page += "<p align=center>";
- page += "<button style=background-color:yellow;width:140px;height:40px onmousedown=getsend('ledon')><b>Light ON</b></button>";
- page += "<button style=background-color:yellow;width:140px;height:40px onmousedown=getsend('ledoff')><b>Light OFF</b></button>";
- page += "</p>";
- 
+    String page = "<!DOCTYPE HTML><html><head><title>Joy</title><meta charset=\"utf-8\"><meta name=\"description\" content=\"Example page of use pure Javascript JoyStick\"><meta name=\"author\" content=\"Roberto D'Amico\"><link rel=\"shortcut icon\" type=\"image/png\" href=\"http://bobboteck.github.io/img/roberto-damico-bobboteck.png\"><script src=\"https://bobboteck.github.io/joy/joy.js\"></script></head><body> <div id=\"joyDiv\" style=\"width:200px;height:200px;margin-bottom:20px;\"></div><script type=\"text/javascript\">var Joy1=new JoyStick('joyDiv'); </script> </body></html>"; 
     return httpd_resp_send(req, &page[0], strlen(&page[0]));
-}
-//前进按钮
-static esp_err_t go_handler(httpd_req_t *req){
-    WheelAct(HIGH, LOW, HIGH, LOW);
-    Serial.println("Go");
-    httpd_resp_set_type(req, "text/html");
-    return httpd_resp_send(req, "OK", 2);
-}
-static esp_err_t back_handler(httpd_req_t *req){
-    WheelAct(LOW, HIGH, LOW, HIGH);
-    Serial.println("Back");
-    httpd_resp_set_type(req, "text/html");
-    return httpd_resp_send(req, "OK", 2);
-}
-
-static esp_err_t left_handler(httpd_req_t *req){
-    WheelAct(HIGH, LOW, LOW, HIGH);
-    Serial.println("Left");
-    httpd_resp_set_type(req, "text/html");
-    return httpd_resp_send(req, "OK", 2);
-}
-static esp_err_t right_handler(httpd_req_t *req){
-    WheelAct(LOW, HIGH, HIGH, LOW);
-    Serial.println("Right");
-    httpd_resp_set_type(req, "text/html");
-    return httpd_resp_send(req, "OK", 2);
-}
-
-static esp_err_t stop_handler(httpd_req_t *req){
-    WheelAct(LOW, LOW, LOW, LOW);
-    Serial.println("Stop");
-    httpd_resp_set_type(req, "text/html");
-    return httpd_resp_send(req, "OK", 2);
 }
 
 static esp_err_t ledon_handler(httpd_req_t *req){
@@ -370,7 +318,70 @@ static esp_err_t ledoff_handler(httpd_req_t *req){
 }
 
 void startCameraServer(){
+
+    //initialize motors
+    L298N leftMotor(gpLs, gpLf, gpLb);
+    L298N rightMotor(gpRs, gpRf, gpRb);
+
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
+
+    // Get X and Y values from the joystick element
+    // and use them to control the motors
+
+    http_trigger_t *trigger = new http_trigger_t();
+    trigger->setOnData([](httpd_req_t *req, String data) {
+        Serial.println(data);
+        int x = data.substring(0, data.indexOf(",")).toInt();
+        int y = data.substring(data.indexOf(",") + 1).toInt();
+        Serial.printf("X: %d, Y: %d\n", x, y);
+        if (y > 0) {
+            int speed_base = y;
+            if (x > 0) {
+                int left_speed = (speed_base + x > 255) ? (255) : (speed_base + x);
+                leftMotor.setSpeed(left_speed);
+                leftMotor.run(L298N::Direction::FORWARD);
+                rightMotor.setSpeed(speed_base);
+                rightMotor.run(L298N::Direction::FORWARD);
+            } else if (x < 0) {
+                int right_speed = (speed_base + x > 255) ? (255) : (speed_base + x);
+                leftMotor.setSpeed(speed_base);
+                leftMotor.run(L298N::Direction::FORWARD);
+                rightMotor.setSpeed(right_speed);
+                rightMotor.run(L298N::Direction::FORWARD);
+            } else {
+                leftMotor.setSpeed(speed_base);
+                leftMotor.run(L298N::Direction::FORWARD);
+                rightMotor.setSpeed(speed_base);
+                rightMotor.run(L298N::Direction::FORWARD);
+            }
+        } else if (y < 0) {
+            int speed_base = -y;
+            if (x > 0) {
+                int left_speed = (speed_base + x > 255) ? (255) : (speed_base + x);
+                leftMotor.setSpeed(left_speed);
+                leftMotor.run(L298N::Direction::BACKWARD);
+                rightMotor.setSpeed(speed_base);
+                rightMotor.run(L298N::Direction::BACKWARD);
+            } else if (x < 0) {
+                int right_speed = (speed_base + x > 255) ? (255) : (speed_base + x);
+                leftMotor.setSpeed(speed_base);
+                leftMotor.run(L298N::Direction::BACKWARD);
+                rightMotor.setSpeed(right_speed);
+                rightMotor.run(L298N::Direction::BACKWARD);
+            } else {
+                leftMotor.setSpeed(speed_base);
+                leftMotor.run(L298N::Direction::BACKWARD);
+                rightMotor.setSpeed(speed_base);
+                rightMotor.run(L298N::Direction::BACKWARD);
+            }
+        } else {
+            leftMotor.setSpeed(0);
+            leftMotor.run(L298N::Direction::STOP);
+            rightMotor.setSpeed(0);
+            rightMotor.run(L298N::Direction::STOP);
+            
+        }
+    });
 
     httpd_uri_t go_uri = {
         .uri       = "/go",
@@ -379,6 +390,13 @@ void startCameraServer(){
         .user_ctx  = NULL
     };
 
+    httpd_uri_t move_uri = {
+        .uri       = "/move",
+        .method    = HTTP_GET,
+        .handler   = move_handler,
+        .user_ctx  = NULL
+    };
+    
     httpd_uri_t back_uri = {
         .uri       = "/back",
         .method    = HTTP_GET,
@@ -421,19 +439,6 @@ void startCameraServer(){
         .user_ctx  = NULL
     };
 
-    httpd_uri_t index_uri = {
-        .uri       = "/",
-        .method    = HTTP_GET,
-        .handler   = index_handler,
-        .user_ctx  = NULL
-    };
-
-    httpd_uri_t status_uri = {
-        .uri       = "/status",
-        .method    = HTTP_GET,
-        .handler   = status_handler,
-        .user_ctx  = NULL
-    };
 
     httpd_uri_t cmd_uri = {
         .uri       = "/control",
@@ -461,27 +466,31 @@ void startCameraServer(){
     Serial.printf("Starting web server on port: '%d'", config.server_port);
     if (httpd_start(&camera_httpd, &config) == ESP_OK) {
         httpd_register_uri_handler(camera_httpd, &index_uri);
-        httpd_register_uri_handler(camera_httpd, &go_uri); 
-        httpd_register_uri_handler(camera_httpd, &back_uri); 
-        httpd_register_uri_handler(camera_httpd, &stop_uri); 
-        httpd_register_uri_handler(camera_httpd, &left_uri);
-        httpd_register_uri_handler(camera_httpd, &right_uri);
-        httpd_register_uri_handler(camera_httpd, &ledon_uri);
-        httpd_register_uri_handler(camera_httpd, &ledoff_uri);
+        // Add motor control handlers
+
+
+        // httpd_register_uri_handler(camera_httpd, &go_uri); 
+        // httpd_register_uri_handler(camera_httpd, &back_uri); 
+        // httpd_register_uri_handler(camera_httpd, &stop_uri); 
+        // httpd_register_uri_handler(camera_httpd, &left_uri);
+        // httpd_register_uri_handler(camera_httpd, &right_uri);
+        // httpd_register_uri_handler(camera_httpd, &ledon_uri);
+        // httpd_register_uri_handler(camera_httpd, &ledoff_uri);
     }
 
     config.server_port += 1;
     config.ctrl_port += 1;
     Serial.printf("Starting stream server on port: '%d'", config.server_port);
-    if (httpd_start(&stream_httpd, &config) == ESP_OK) {
-        httpd_register_uri_handler(stream_httpd, &stream_uri);
-    }
+    // if (httpd_start(&stream_httpd, &config) == ESP_OK) {
+    //     httpd_register_uri_handler(stream_httpd, &stream_uri);
+    // }
 }
 
-void WheelAct(int nLf, int nLb, int nRf, int nRb)
+void WheelAct(int leftSpeed, L298N::Direction leftDirection, int rightSpeed, L298N::Direction rightDirection )
 {
- digitalWrite(gpLf, nLf);
- digitalWrite(gpLb, nLb);
- digitalWrite(gpRf, nRf);
- digitalWrite(gpRb, nRb);
+    leftMotor.setSpeed(leftSpeed);
+    leftMotor.run(leftDirection);
+
+    rightMotor.setSpeed(rightSpeed);
+    rightMotor.run(rightDirection);
 }
