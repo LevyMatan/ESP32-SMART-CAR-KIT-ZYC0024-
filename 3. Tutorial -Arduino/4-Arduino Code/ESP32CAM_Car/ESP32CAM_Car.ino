@@ -6,7 +6,6 @@
  */
 
 #include "esp_camera.h"
-#include "L298N.h"
 #include <WiFi.h>
 
 //

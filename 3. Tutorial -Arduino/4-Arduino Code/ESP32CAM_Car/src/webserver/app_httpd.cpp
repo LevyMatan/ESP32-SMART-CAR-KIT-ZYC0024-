@@ -9,14 +9,8 @@
 #include "img_converters.h"
 #include "camera_index.h"
 #include "Arduino.h"
-#include "L298N.h"
+#include "../move/move.hpp"
 
-extern int gpLs;
-extern int gpLb;
-extern int gpLf;
-extern int gpRs;
-extern int gpRb;
-extern int gpRf;
 extern int gpLed;
 extern String WiFiAddr;
 
@@ -33,7 +27,6 @@ typedef struct {
         size_t len;
 } jpg_chunking_t;
 
-void WheelAct(int leftSpeed, L298N::Direction leftDirection, int rightSpeed, L298N::Direction rightDirection );
 #define PART_BOUNDARY "123456789000000000000987654321"
 static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
 static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
@@ -42,10 +35,6 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 static ra_filter_t ra_filter;
 httpd_handle_t stream_httpd = NULL;
 httpd_handle_t camera_httpd = NULL;
-
-// //initialize motors
-L298N leftMotor(gpLs, gpLf, gpLb);
-L298N rightMotor(gpRs, gpRf, gpRb);
 
 static ra_filter_t * ra_filter_init(ra_filter_t * filter, size_t sample_size){
     memset(filter, 0, sizeof(ra_filter_t));
@@ -331,7 +320,7 @@ static esp_err_t move_handler(httpd_req_t *req){
 
     // Extract the corrdinates X and Y from the string of the form /move?X,Y
     String str_y = data.substring(data.indexOf(",") + 1);
-    Serial.println(str_y);
+    // Serial.println(str_y);
     data.remove(data.indexOf(","));
     String str_x = data.substring(data.indexOf("?")+1);
     // Serial.println(str_x);
@@ -340,21 +329,9 @@ static esp_err_t move_handler(httpd_req_t *req){
     int y = str_y.toInt();
 
     Serial.printf("X: %d, Y: %d\n", x, y);
-    int speed_base = abs(y);
-    int left_speed = speed_base;
-    int right_speed = speed_base;
-    L298N::Direction direction = L298N::Direction::STOP;
-    if (x > 0) {
-        left_speed = (speed_base + x > 255) ? (255) : (speed_base + x);
-    } else if (x < 0) {
-        right_speed = (speed_base - x > 255) ? (255) : (speed_base - x);
-    }
-    if (y > 0) {
-        direction = L298N::Direction::FORWARD;
-    } else if (y < 0) {
-        direction = L298N::Direction::BACKWARD;
-    }
-    WheelAct(left_speed, direction, right_speed, direction);
+    move_params_t move_params = get_move_params_from_joystick_coordinates(x, y);
+    DEBUG_print_move_params(&move_params);
+
     httpd_resp_set_type(req, "text/html");
     return httpd_resp_send(req, "OK", 2);
 }
@@ -406,12 +383,4 @@ void startCameraServer(){
     // if (httpd_start(&stream_httpd, &config) == ESP_OK) {
     //     httpd_register_uri_handler(stream_httpd, &stream_uri);
     // }
-}
-
-void WheelAct(int leftSpeed, L298N::Direction leftDirection, int rightSpeed, L298N::Direction rightDirection ){
-    leftMotor.setSpeed(leftSpeed);
-    leftMotor.run(leftDirection);
-
-    rightMotor.setSpeed(rightSpeed);
-    rightMotor.run(rightDirection);
 }
