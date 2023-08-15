@@ -108,10 +108,6 @@ void spin(int speed, spin_direction_t direction)
  */
 move_params_t get_move_params_from_joystick_coordinates(int x, int y)
 {
-    #define MAX_SPEED 255
-    // Step 1: Scale x and y to speed limits
-    x = map(x, -100, 100, -MAX_SPEED, MAX_SPEED);
-    y = map(y, -100, 100, -MAX_SPEED, MAX_SPEED);
     move_params_t move_params = {};
     if (y > 0)
     {
@@ -129,6 +125,7 @@ move_params_t get_move_params_from_joystick_coordinates(int x, int y)
         move_params.right_direction = L298N::Direction::STOP;
     }
 
+    #define MAX_SPEED            (255)
     #define MAX_NORMALIZED_SPEED (142)
 
     int base_speed = sqrt(x * x + y * y);
@@ -147,6 +144,14 @@ move_params_t get_move_params_from_joystick_coordinates(int x, int y)
     {
         move_params.left_speed = base_speed;
         move_params.right_speed = base_speed;
+    }
+
+    // normalize speed - keep speed to [0, MAX_SPEED]
+    int max_speed = max(move_params.left_speed, move_params.right_speed);
+    if (max_speed > MAX_SPEED)
+    {
+        move_params.left_speed = move_params.left_speed * MAX_SPEED / max_speed;
+        move_params.right_speed = move_params.right_speed * MAX_SPEED / max_speed;
     }
     return move_params;
 }
