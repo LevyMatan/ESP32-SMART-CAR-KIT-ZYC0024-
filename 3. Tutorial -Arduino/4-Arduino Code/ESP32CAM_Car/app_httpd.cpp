@@ -1,7 +1,7 @@
 /*
  * @Date: 2020-11-27 11:45:09
  * @Description: ESP32 Camera Surveillance Car
- * @FilePath: 
+ * @FilePath:
  */
 #include "esp_http_server.h"
 #include "esp_timer.h"
@@ -33,6 +33,7 @@ typedef struct {
         size_t len;
 } jpg_chunking_t;
 
+void WheelAct(int leftSpeed, L298N::Direction leftDirection, int rightSpeed, L298N::Direction rightDirection );
 #define PART_BOUNDARY "123456789000000000000987654321"
 static const char* _STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
 static const char* _STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
@@ -41,6 +42,10 @@ static const char* _STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %
 static ra_filter_t ra_filter;
 httpd_handle_t stream_httpd = NULL;
 httpd_handle_t camera_httpd = NULL;
+
+// //initialize motors
+L298N leftMotor(gpLs, gpLf, gpLb);
+L298N rightMotor(gpRs, gpRf, gpRb);
 
 static ra_filter_t * ra_filter_init(ra_filter_t * filter, size_t sample_size){
     memset(filter, 0, sizeof(ra_filter_t));
@@ -300,7 +305,7 @@ static esp_err_t status_handler(httpd_req_t *req){
 
 static esp_err_t index_handler(httpd_req_t *req){
     httpd_resp_set_type(req, "text/html");
-    String page = "<!DOCTYPE HTML><html><head><title>Joy</title><meta charset=\"utf-8\"><meta name=\"description\" content=\"Example page of use pure Javascript JoyStick\"><meta name=\"author\" content=\"Roberto D'Amico\"><link rel=\"shortcut icon\" type=\"image/png\" href=\"http://bobboteck.github.io/img/roberto-damico-bobboteck.png\"><script src=\"https://levymatan.github.io/JoyStick/joy.js\"></script></head><body> <div id=\"joyDiv\" style=\"width:200px;height:200px;margin-bottom:20px;\"></div><p id=\"p1\">Hello World!</p><p id=\"testtest\">My Name is what</p><script type=\"text/javascript\">var Joy1=new JoyStick('joyDiv',{}, function(stickData){var xhttp=new XMLHttpRequest(); var arg=stickData.x + \",\" + stickData.y document.getElementById(\"p1\").innerHTML=arg; xhttp.open('GET', 'move' + '?' + arg, true); xhttp.send()}); </script> </body></html>";
+    String page = "<!DOCTYPE HTML><html><head><title>Joy</title><meta charset=\"utf-8\"><meta name=\"description\" content=\"Example page of use pure Javascript JoyStick\"><meta name=\"author\" content=\"Roberto D'Amico\"><link rel=\"shortcut icon\" type=\"image/png\" href=\"http://bobboteck.github.io/img/roberto-damico-bobboteck.png\"><script src=\"https://levymatan.github.io/JoyStick/joy.js\"></script></head><body> <div id=\"joyDiv\" style=\"width:200px;height:200px;margin-bottom:20px;\"></div><p id=\"p1\">Hello World!</p><p id=\"testtest\">My Name is what</p><script type=\"text/javascript\">var Joy1=new JoyStick('joyDiv',{}, function(stickData){var xhttp=new XMLHttpRequest(); var arg=stickData.x + \",\" + stickData.y; document.getElementById(\"p1\").innerHTML=arg; xhttp.open('GET', 'move' + '?' + arg, true); xhttp.send()}); </script> </body></html>";
     return httpd_resp_send(req, &page[0], strlen(&page[0]));
 }
 
@@ -310,6 +315,7 @@ static esp_err_t ledon_handler(httpd_req_t *req){
     httpd_resp_set_type(req, "text/html");
     return httpd_resp_send(req, "OK", 2);
 }
+
 static esp_err_t ledoff_handler(httpd_req_t *req){
     digitalWrite(gpLed, LOW);
     Serial.println("LED OFF");
@@ -317,16 +323,22 @@ static esp_err_t ledoff_handler(httpd_req_t *req){
     return httpd_resp_send(req, "OK", 2);
 }
 
-static esp_err_t move_handler(httpd_req_t *req)
-{
+static esp_err_t move_handler(httpd_req_t *req){
     Serial.println("Move");
     // Get the value of the query string arg param
-    String data = req->getParam("param")->value();
-    Serial.println(data);
+    String data(req->uri);
+    // Serial.println(data);
 
-    int x = data.substring(0, data.indexOf(",")).toInt();
-    int y = data.substring(0, data.indexOf(",")).toInt();
-    
+    // Extract the corrdinates X and Y from the string of the form /move?X,Y
+    String str_y = data.substring(data.indexOf(",") + 1);
+    Serial.println(str_y);
+    data.remove(data.indexOf(","));
+    String str_x = data.substring(data.indexOf("?")+1);
+    // Serial.println(str_x);
+
+    int x = str_x.toInt();
+    int y = str_y.toInt();
+
     Serial.printf("X: %d, Y: %d\n", x, y);
     int speed_base = abs(y);
     int left_speed = speed_base;
@@ -346,18 +358,15 @@ static esp_err_t move_handler(httpd_req_t *req)
     httpd_resp_set_type(req, "text/html");
     return httpd_resp_send(req, "OK", 2);
 }
-void startCameraServer(){
 
-    //initialize motors
-    L298N leftMotor(gpLs, gpLf, gpLb);
-    L298N rightMotor(gpRs, gpRf, gpRb);
+void startCameraServer(){
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
 
-    httpd_uri_t go_uri = {
-        .uri       = "/go",
+    httpd_uri_t index_uri = {
+        .uri       = "/",
         .method    = HTTP_GET,
-        .handler   = go_handler,
+        .handler   = index_handler,
         .user_ctx  = NULL
     };
 
@@ -368,41 +377,13 @@ void startCameraServer(){
         .user_ctx  = NULL
     };
 
-    httpd_uri_t back_uri = {
-        .uri       = "/back",
-        .method    = HTTP_GET,
-        .handler   = back_handler,
-        .user_ctx  = NULL
-    };
-
-    httpd_uri_t stop_uri = {
-        .uri       = "/stop",
-        .method    = HTTP_GET,
-        .handler   = stop_handler,
-        .user_ctx  = NULL
-    };
-
-    httpd_uri_t left_uri = {
-        .uri       = "/left",
-        .method    = HTTP_GET,
-        .handler   = left_handler,
-        .user_ctx  = NULL
-    };
-    
-    httpd_uri_t right_uri = {
-        .uri       = "/right",
-        .method    = HTTP_GET,
-        .handler   = right_handler,
-        .user_ctx  = NULL
-    };
-    
     httpd_uri_t ledon_uri = {
         .uri       = "/ledon",
         .method    = HTTP_GET,
         .handler   = ledon_handler,
         .user_ctx  = NULL
     };
-    
+
     httpd_uri_t ledoff_uri = {
         .uri       = "/ledoff",
         .method    = HTTP_GET,
@@ -410,53 +391,24 @@ void startCameraServer(){
         .user_ctx  = NULL
     };
 
-
-    httpd_uri_t cmd_uri = {
-        .uri       = "/control",
-        .method    = HTTP_GET,
-        .handler   = cmd_handler,
-        .user_ctx  = NULL
-    };
-
-    httpd_uri_t capture_uri = {
-        .uri       = "/capture",
-        .method    = HTTP_GET,
-        .handler   = capture_handler,
-        .user_ctx  = NULL
-    };
-
-   httpd_uri_t stream_uri = {
-        .uri       = "/stream",
-        .method    = HTTP_GET,
-        .handler   = stream_handler,
-        .user_ctx  = NULL
-    };
-
-
     ra_filter_init(&ra_filter, 20);
     Serial.printf("Starting web server on port: '%d'", config.server_port);
     if (httpd_start(&camera_httpd, &config) == ESP_OK) {
         httpd_register_uri_handler(camera_httpd, &index_uri);
-        httpd_register_uri_handler(camera_httpd, &move_uri); 
-        // httpd_register_uri_handler(camera_httpd, &go_uri); 
-        // httpd_register_uri_handler(camera_httpd, &back_uri); 
-        // httpd_register_uri_handler(camera_httpd, &stop_uri); 
-        // httpd_register_uri_handler(camera_httpd, &left_uri);
-        // httpd_register_uri_handler(camera_httpd, &right_uri);
+        httpd_register_uri_handler(camera_httpd, &move_uri);
         httpd_register_uri_handler(camera_httpd, &ledon_uri);
         httpd_register_uri_handler(camera_httpd, &ledoff_uri);
     }
 
     config.server_port += 1;
     config.ctrl_port += 1;
-    Serial.printf("Starting stream server on port: '%d'", config.server_port);
+    // Serial.printf("Starting stream server on port: '%d'", config.server_port);
     // if (httpd_start(&stream_httpd, &config) == ESP_OK) {
     //     httpd_register_uri_handler(stream_httpd, &stream_uri);
     // }
 }
 
-void WheelAct(int leftSpeed, L298N::Direction leftDirection, int rightSpeed, L298N::Direction rightDirection )
-{
+void WheelAct(int leftSpeed, L298N::Direction leftDirection, int rightSpeed, L298N::Direction rightDirection ){
     leftMotor.setSpeed(leftSpeed);
     leftMotor.run(leftDirection);
 

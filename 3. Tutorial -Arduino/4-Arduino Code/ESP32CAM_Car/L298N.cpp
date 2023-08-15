@@ -45,8 +45,8 @@ unsigned short L298N::getSpeed() {
 }
 
 void L298N::forward() {
-  digitalWrite(_pinIN1, HIGH);
-  digitalWrite(_pinIN2, LOW);
+  digitalWrite(_pinIN1, LOW);
+  digitalWrite(_pinIN2, HIGH);
 
   analogWrite(_pinEnable, _pwmVal);
 
@@ -55,8 +55,8 @@ void L298N::forward() {
 }
 
 void L298N::backward() {
-  digitalWrite(_pinIN1, LOW);
-  digitalWrite(_pinIN2, HIGH);
+  digitalWrite(_pinIN1, HIGH);
+  digitalWrite(_pinIN2, LOW);
 
   analogWrite(_pinEnable, _pwmVal);
 

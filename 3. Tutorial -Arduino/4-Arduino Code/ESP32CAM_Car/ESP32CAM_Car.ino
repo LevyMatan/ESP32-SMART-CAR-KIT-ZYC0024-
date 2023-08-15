@@ -2,7 +2,7 @@
 /*
  * @Date: 2020-11-27 11:45:09
  * @Description: ESP32 Camera Surveillance Car
- * @FilePath: 
+ * @FilePath:
  */
 
 #include "esp_camera.h"
@@ -20,7 +20,7 @@
 //#define CAMERA_MODEL_M5STACK_PSRAM
 #define CAMERA_MODEL_AI_THINKER
 
-const char* ssid = "TP-LINK-4999";   //Enter SSID WIFI Name
+const char* ssid = "TP-LINK_4999";   //Enter SSID WIFI Name
 const char* password = "46436214";   //Enter WIFI Password
 
 #if defined(CAMERA_MODEL_WROVER_KIT)
@@ -67,10 +67,11 @@ const char* password = "46436214";   //Enter WIFI Password
 #endif
 
 // GPIO Setting
-extern int gpLs =  16; // Left speed (PWM)
+// PWM pin for motor speed
+extern int gpLs =  13; // Left speed (PWM)
 extern int gpLb =  2; // Left 1
 extern int gpLf = 14; // Left 2
-extern int gpRs = 17; // Right speed (PWM)
+extern int gpRs = 13; // Right speed (PWM)
 extern int gpRb = 15; // Right 1
 extern int gpRf = 13; // Right 2
 extern int gpLed =  4; // Light
@@ -120,20 +121,20 @@ void setup() {
   }
 
   // camera init
-  esp_err_t err = esp_camera_init(&config);
-  if (err != ESP_OK) {
-    Serial.printf("Camera init failed with error 0x%x", err);
-    return;
-  }
+  // esp_err_t err = esp_camera_init(&config);
+  // if (err != ESP_OK) {
+  //   Serial.printf("Camera init failed with error 0x%x", err);
+  //   return;
+  // }
 
   //drop down frame size for higher initial frame rate
-  sensor_t * s = esp_camera_sensor_get();
-  s->set_framesize(s, FRAMESIZE_CIF);
+//   sensor_t * s = esp_camera_sensor_get();
+//   s->set_framesize(s, FRAMESIZE_CIF);
 
-#if defined(CAMERA_MODEL_M5STACK_WIDE) || defined(CAMERA_MODEL_M5STACK_ESP32CAM) || defined(CAMERA_MODEL_AI_THINKER)
-  s->set_vflip(s, 0);
-  s->set_hmirror(s, 0);
-#endif
+// #if defined(CAMERA_MODEL_M5STACK_WIDE) || defined(CAMERA_MODEL_M5STACK_ESP32CAM) || defined(CAMERA_MODEL_AI_THINKER)
+//   s->set_vflip(s, 0);
+//   s->set_hmirror(s, 0);
+// #endif
 
   WiFi.begin(ssid, password);
 
@@ -152,9 +153,9 @@ void setup() {
   Serial.println("' to connect");
 }
 
-void loop() 
+void loop()
 {
-  
+
 // put your main code here, to run repeatedly:
 
 }
