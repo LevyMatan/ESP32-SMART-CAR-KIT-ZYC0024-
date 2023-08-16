@@ -31,7 +31,7 @@ def html_to_c_variable(html_file_path, variable_name):
 if __name__ == '__main__':
     import sys
 
-    INPUT_HTML_FILE_PATH = """/workspaces/ESP32-SMART-CAR-KIT-ZYC0024-/3. Tutorial -Arduino/4-Arduino Code/ESP32CAM_Car/src/webserver/joysticks.html"""
+    INPUT_HTML_FILE_PATH = """/workspaces/ESP32-SMART-CAR-KIT-ZYC0024-/src/webserver/joysticks.html"""
     HTML_FILE_PATH = """../src/webserver/html_string.cpp"""
     VARIABLE_NAME = "page"
     C_VARIABLE = html_to_c_variable(INPUT_HTML_FILE_PATH, VARIABLE_NAME)
