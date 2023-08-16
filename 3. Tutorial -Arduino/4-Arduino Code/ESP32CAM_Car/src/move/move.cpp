@@ -102,53 +102,48 @@ void spin(int speed, spin_direction_t direction)
 /**
  * @brief Get the move params from joystick coordinates
  *
- * @param x
- * @param y
+ * @param speed
+ * @param turn
  * @return move_params_t
  */
-move_params_t get_move_params_from_joystick_coordinates(int x, int y)
+move_params_t get_move_params_from_joystick_coordinates(int speed, int turn)
 {
     move_params_t move_params = {};
-    if (y > 0)
+    // Compute direction.
+    L298N::Direction direction;
+    if (speed > 0)
     {
-        move_params.left_direction = L298N::Direction::FORWARD;
-        move_params.right_direction = L298N::Direction::FORWARD;
+        direction = L298N::Direction::FORWARD;
     }
-    else if (y < 0)
+    else if (speed < 0)
     {
-        move_params.left_direction = L298N::Direction::BACKWARD;
-        move_params.right_direction = L298N::Direction::BACKWARD;
+        direction = L298N::Direction::BACKWARD;
     }
     else
     {
-        move_params.left_direction = L298N::Direction::STOP;
-        move_params.right_direction = L298N::Direction::STOP;
+        direction = L298N::Direction::STOP;
     }
+    move_params.left_direction = direction;
+    move_params.right_direction = direction;
 
     #define MAX_SPEED            (255)
-    #define MAX_NORMALIZED_SPEED (142)
-
-    int base_speed = sqrt(x * x + y * y);
-    int normolized_speed = base_speed * MAX_SPEED / MAX_NORMALIZED_SPEED;
+    #define MAX_NORMALIZED_SPEED (100)
+    speed = abs(speed);
+    speed = (speed > MAX_NORMALIZED_SPEED) ? MAX_NORMALIZED_SPEED : speed;
+    turn = (turn > MAX_NORMALIZED_SPEED) ? MAX_NORMALIZED_SPEED : turn;
+    int normolized_speed = speed * MAX_SPEED / MAX_NORMALIZED_SPEED;
+    int normolized_turn = turn * MAX_SPEED / MAX_NORMALIZED_SPEED;
 
     move_params.left_speed = normolized_speed;
     move_params.right_speed = normolized_speed;
-    if (x < 0) // turning left ==> increase right speed
+    if (x < 0) // turning left ==> decrease left speed
     {
-        move_params.right_speed -= x;
+        move_params.left_speed = normolized_speed - normolized_turn;
     }
-    else if (x > 0) // turning right ==> increase left speed
+    else if (x > 0) // turning right ==> decrease right speed
     {
-        move_params.left_speed += x;
+        move_params.right_speed = normolized_speed - normolized_turn;
     }
 
-
-    // normalize speed - keep speed to [0, MAX_SPEED]
-    int max_speed = max(move_params.left_speed, move_params.right_speed);
-    if (max_speed > MAX_SPEED)
-    {
-        move_params.left_speed = move_params.left_speed * MAX_SPEED / max_speed;
-        move_params.right_speed = move_params.right_speed * MAX_SPEED / max_speed;
-    }
     return move_params;
 }

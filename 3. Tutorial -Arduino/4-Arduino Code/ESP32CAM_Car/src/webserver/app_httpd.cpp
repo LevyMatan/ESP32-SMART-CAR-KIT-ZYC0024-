@@ -319,17 +319,17 @@ static esp_err_t move_handler(httpd_req_t *req){
     // Serial.println(data);
 
     // Extract the corrdinates X and Y from the string of the form /move?X,Y
-    String str_y = data.substring(data.indexOf(",") + 1);
+    String turn_str = data.substring(data.indexOf(",") + 1);
     // Serial.println(str_y);
     data.remove(data.indexOf(","));
-    String str_x = data.substring(data.indexOf("?")+1);
+    String speed_str = data.substring(data.indexOf("?")+1);
     // Serial.println(str_x);
 
-    int x = str_x.toInt();
-    int y = str_y.toInt();
+    int speed = speed_str.toInt();
+    int turn = turn_str.toInt();
 
-    Serial.printf("X: %d, Y: %d\n", x, y);
-    move_params_t move_params = get_move_params_from_joystick_coordinates(x, y);
+    Serial.printf("X: %d, Y: %d\n", speed, turn);
+    move_params_t move_params = get_move_params_from_joystick_coordinates(speed, turn);
     DEBUG_print_move_params(&move_params);
     wheel_action(&move_params);
     httpd_resp_set_type(req, "text/html");

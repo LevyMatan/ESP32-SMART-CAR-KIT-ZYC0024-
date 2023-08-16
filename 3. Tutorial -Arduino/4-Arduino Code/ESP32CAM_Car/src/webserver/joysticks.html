@@ -1,0 +1,7 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <title>Joy</title>
+        <meta charset=\"utf-8\">
+        <meta name=\"description\" content=\"ESP32 Car Remote Controller \">
+        <meta name=\"author\" content=\"Matan Levy\"><link rel=\"shortcut icon\" type=\"image/png\" href=\"http://bobboteck.github.io/img/roberto-damico-bobboteck.png\"><script src=\"https://levymatan.github.io/JoyStick/joy.js\"></script></head><body> <div id=\"joyDiv\" style=\"width:200px;height:200px;margin-bottom:20px;\"></div><p id=\"p1\">Hello World!</p><p id=\"testtest\">My Name is what</p><script type=\"text/javascript\">var Joy1=new JoyStick('joyDiv',{}, function(stickData){var xhttp=new XMLHttpRequest(); var arg=stickData.x + \",\" + stickData.y; document.getElementById(\"p1\").innerHTML=arg; xhttp.open('GET', 'move' + '?' + arg, true); xhttp.send()}); </script> </body></html>";
