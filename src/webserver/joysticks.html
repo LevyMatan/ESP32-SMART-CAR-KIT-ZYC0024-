@@ -1,28 +1,29 @@
 <!DOCTYPE HTML>
 <html>
-	<head>
-		<title>Joy</title>
-		<meta charset="utf-8">
-		<meta name="description" content="ESP32 Remote Controller for Car">
-		<meta name="author" content="Matan Levy">
-		<script src="https://levymatan.github.io/JoyStick/joy.js"></script>
-	</head>
+    <head>
+        <title>Joy</title>
+        <meta charset="utf-8">
+        <meta name="description" content="ESP32 Remote Controller for Car">
+        <meta name="author" content="Matan Levy">
+        <script src="https://levymatan.github.io/JoyStick/joy.js"></script>
+        <style>
+            .joystick-container {
+                display: inline-block;
+                vertical-align: top;
+                margin-right: 20px;
+            }
+        </style>
+    </head>
 
-	<body>
-        // Create two joysticks, one for speed and one for turn
-        // The joysticks will send a GET request to the ESP32 with the speed and turn values
-        // The turn joystick should be on the left and the speed joystick should be on the right
-        // The value of each should be between -100 and 100
-        // and it should be displayed above the joystick
-
-        
-        // Create a div for the turn joystick, and align it to the left
-        <div id="joyDiv-turn" style="width:200px;height:200px;margin-bottom:20px;"></div>
-        // Create a div for the speed joystick, and align it to the right
-
-        <div id="joyDiv-speed" style="width:200px;height:200px;margin-bottom:20px;"></div>
-        <p id="speed-value">Speed Value: </p>
-        <p id="turn-value">Turn Value: </p>
+    <body>
+        <div class="joystick-container">
+            <p id="turn-value">Turn Value: </p>
+            <div id="joyDiv-turn" style="width:200px;height:200px;"></div>
+        </div>
+        <div class="joystick-container">
+            <p id="speed-value">Speed Value: </p>
+            <div id="joyDiv-speed" style="width:200px;height:200px;"></div>
+        </div>
         <script type="text/javascript">
             var speed = 0;
             var turn = 0;
@@ -39,7 +40,7 @@
                 document.getElementById("speed-value").innerHTML = "Speed Value: " + speed_arg;
                 document.getElementById("turn-value").innerHTML = "Turn Value: " + turn_arg;
             }
-                                       
+                                    
             var JoyTurn = new JoyStick('joyDiv-turn', {}, function(stickData) {
                 turn = stickData.x;
                 updateHtmlInfo(speed, turn);
@@ -53,5 +54,4 @@
             });
         </script>
     </body>
-
 </html>
