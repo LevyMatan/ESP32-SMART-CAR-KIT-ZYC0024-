@@ -136,13 +136,14 @@ move_params_t get_move_params_from_joystick_coordinates(int speed, int turn)
 
     move_params.left_speed = normolized_speed;
     move_params.right_speed = normolized_speed;
+    int decreased_speed = ((normolized_speed - normolized_turn) < 0) ? 0 : (normolized_speed - normolized_turn);
     if (turn < 0) // turning left ==> decrease left speed
     {
-        move_params.left_speed = normolized_speed - normolized_turn;
+        move_params.left_speed = decreased_speed;
     }
     else if (turn > 0) // turning right ==> decrease right speed
     {
-        move_params.right_speed = normolized_speed - normolized_turn;
+        move_params.right_speed = decreased_speed;
     }
 
     return move_params;
