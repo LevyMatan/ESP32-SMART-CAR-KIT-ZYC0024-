@@ -26,8 +26,8 @@
 
             function updateHtmlInfo(speed_arg, turn_arg)
             {
-                document.getElementById("speed-value").innerHTML = speed_arg;
-                document.getElementById("turn-value").innerHTML = turn_arg;
+                document.getElementById("speed-value").innerHTML = "Speed Value: " + speed_arg;
+                document.getElementById("turn-value").innerHTML = "Turn Value: " + turn_arg;
             }
                                        
             var JoyTurn = new JoyStick('joyDiv-turn', {}, function(stickData) {
