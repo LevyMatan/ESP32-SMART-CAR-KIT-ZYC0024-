@@ -130,17 +130,17 @@ move_params_t get_move_params_from_joystick_coordinates(int speed, int turn)
     #define MAX_NORMALIZED_SPEED (100)
     speed = abs(speed);
     speed = (speed > MAX_NORMALIZED_SPEED) ? MAX_NORMALIZED_SPEED : speed;
-    turn = (turn > MAX_NORMALIZED_SPEED) ? MAX_NORMALIZED_SPEED : turn;
+    turn = (abs(turn) > MAX_NORMALIZED_SPEED) ? MAX_NORMALIZED_SPEED : turn;
     int normolized_speed = speed * MAX_SPEED / MAX_NORMALIZED_SPEED;
     int normolized_turn = turn * MAX_SPEED / MAX_NORMALIZED_SPEED;
 
     move_params.left_speed = normolized_speed;
     move_params.right_speed = normolized_speed;
-    if (x < 0) // turning left ==> decrease left speed
+    if (turn < 0) // turning left ==> decrease left speed
     {
         move_params.left_speed = normolized_speed - normolized_turn;
     }
-    else if (x > 0) // turning right ==> decrease right speed
+    else if (turn > 0) // turning right ==> decrease right speed
     {
         move_params.right_speed = normolized_speed - normolized_turn;
     }
