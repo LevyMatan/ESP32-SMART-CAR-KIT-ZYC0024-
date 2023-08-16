@@ -9,7 +9,17 @@
 	</head>
 
 	<body>
+        // Create two joysticks, one for speed and one for turn
+        // The joysticks will send a GET request to the ESP32 with the speed and turn values
+        // The turn joystick should be on the left and the speed joystick should be on the right
+        // The value of each should be between -100 and 100
+        // and it should be displayed above the joystick
+
+        
+        // Create a div for the turn joystick, and align it to the left
         <div id="joyDiv-turn" style="width:200px;height:200px;margin-bottom:20px;"></div>
+        // Create a div for the speed joystick, and align it to the right
+
         <div id="joyDiv-speed" style="width:200px;height:200px;margin-bottom:20px;"></div>
         <p id="speed-value">Speed Value: </p>
         <p id="turn-value">Turn Value: </p>
