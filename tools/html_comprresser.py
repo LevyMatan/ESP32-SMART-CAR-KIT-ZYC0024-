@@ -22,10 +22,7 @@ def compress_html_file(file_path):
     html = re.sub(r'<!--.*?-->', '', html, flags=re.DOTALL)
 
     # Remove C-style comments
-    html = re.sub(r'//.*?\n|/\*.*?\*/', '', html, flags=re.DOTALL)
-
-    # Restore URLs
-    html = re.sub(r'(?P<url>https?://[^\s]+)', r'<\g<url>>', html)
+    html = re.sub(r'//.*?\n|/\*.*?\*/|(?P<url>https?://[^\s]+)', lambda m: m.group('url') or '', html, flags=re.DOTALL)
 
     # Remove line breaks
     html = html.replace('\n', '')
