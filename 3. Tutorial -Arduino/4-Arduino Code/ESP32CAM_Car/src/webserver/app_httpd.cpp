@@ -331,7 +331,7 @@ static esp_err_t move_handler(httpd_req_t *req){
     Serial.printf("X: %d, Y: %d\n", x, y);
     move_params_t move_params = get_move_params_from_joystick_coordinates(x, y);
     DEBUG_print_move_params(&move_params);
-
+    wheel_action(&move_params);
     httpd_resp_set_type(req, "text/html");
     return httpd_resp_send(req, "OK", 2);
 }

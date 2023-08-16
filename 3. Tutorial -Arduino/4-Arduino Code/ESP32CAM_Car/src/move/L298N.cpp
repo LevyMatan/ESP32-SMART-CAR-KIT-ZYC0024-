@@ -133,7 +133,7 @@ void L298N::stop() {
   digitalWrite(_pinIN1, LOW);
   digitalWrite(_pinIN2, LOW);
 
-  analogWrite(_pinEnable, 255);
+  analogWrite(_pinEnable, 0);
 
   _direction = STOP;
   _isMoving = false;

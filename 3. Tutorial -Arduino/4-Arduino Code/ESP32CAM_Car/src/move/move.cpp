@@ -130,21 +130,18 @@ move_params_t get_move_params_from_joystick_coordinates(int x, int y)
 
     int base_speed = sqrt(x * x + y * y);
     int normolized_speed = base_speed * MAX_SPEED / MAX_NORMALIZED_SPEED;
-    if (x < 0) // turning left
+
+    move_params.left_speed = normolized_speed;
+    move_params.right_speed = normolized_speed;
+    if (x < 0) // turning left ==> increase right speed
     {
-        move_params.left_speed = base_speed + x;
-        move_params.right_speed = base_speed;
+        move_params.right_speed -= x;
     }
-    else if (x > 0) // turning right
+    else if (x > 0) // turning right ==> increase left speed
     {
-        move_params.left_speed = base_speed;
-        move_params.right_speed = base_speed - x;
+        move_params.left_speed += x;
     }
-    else // going straight
-    {
-        move_params.left_speed = base_speed;
-        move_params.right_speed = base_speed;
-    }
+
 
     // normalize speed - keep speed to [0, MAX_SPEED]
     int max_speed = max(move_params.left_speed, move_params.right_speed);

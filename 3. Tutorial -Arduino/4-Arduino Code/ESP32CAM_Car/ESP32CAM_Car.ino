@@ -67,10 +67,10 @@ const char* password = "46436214";   //Enter WIFI Password
 
 // GPIO Setting
 // PWM pin for motor speed
-extern int gpLs =  13; // Left speed (PWM)
+extern int gpLs =  12; // Left speed (PWM)
 extern int gpLb =  2; // Left 1
 extern int gpLf = 14; // Left 2
-extern int gpRs = 13; // Right speed (PWM)
+extern int gpRs = 0; // Right speed (PWM)
 extern int gpRb = 15; // Right 1
 extern int gpRf = 13; // Right 2
 extern int gpLed =  4; // Light
