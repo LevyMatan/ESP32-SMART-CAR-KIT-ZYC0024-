@@ -37,6 +37,9 @@ static ra_filter_t ra_filter;
 httpd_handle_t stream_httpd = NULL;
 httpd_handle_t camera_httpd = NULL;
 
+/**
+ * @brief Initialize the rolling average filter.
+*/
 static ra_filter_t * ra_filter_init(ra_filter_t * filter, size_t sample_size){
     memset(filter, 0, sizeof(ra_filter_t));
 
@@ -336,6 +339,28 @@ static esp_err_t move_handler(httpd_req_t *req){
     return httpd_resp_send(req, "OK", 2);
 }
 
+static esp_err_t spinright_handler(httpd_req_t *req){
+    Serial.println("Spin Right");
+    spin(255, RIGHT_E);
+    httpd_resp_set_type(req, "text/html");
+    return httpd_resp_send(req, "OK", 2);
+}
+
+static esp_err_t spinleft_handler(httpd_req_t *req){
+    Serial.println("Spin Left");
+    spin(255, LEFT_E);
+    httpd_resp_set_type(req, "text/html");
+    return httpd_resp_send(req, "OK", 2);
+}
+
+static esp_err_t stop_handler(httpd_req_t *req){
+    Serial.println("Stop");
+    move_params_t move_params = {0, L298N::Direction::STOP, 0 , L298N::Direction::STOP};
+    wheel_action(&move_params);
+    httpd_resp_set_type(req, "text/html");
+    return httpd_resp_send(req, "OK", 2);
+}
+
 void startCameraServer(){
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -368,13 +393,37 @@ void startCameraServer(){
         .user_ctx  = NULL
     };
 
-    ra_filter_init(&ra_filter, 20);
+    httpd_uri_t spinleft_uri = {
+        .uri       = "/spinleft",
+        .method    = HTTP_GET,
+        .handler   = spinleft_handler,
+        .user_ctx  = NULL
+    };
+
+    httpd_uri_t spinright_uri = {
+        .uri       = "/spinleft",
+        .method    = HTTP_GET,
+        .handler   = spinright_handler,
+        .user_ctx  = NULL
+    };
+
+    httpd_uri_t stop_uri = {
+        .uri       = "/stop",
+        .method    = HTTP_GET,
+        .handler   = stop_handler,
+        .user_ctx  = NULL
+    };
+
+
+    // ra_filter_init(&ra_filter, 20);
     Serial.printf("Starting web server on port: '%d'", config.server_port);
     if (httpd_start(&camera_httpd, &config) == ESP_OK) {
         httpd_register_uri_handler(camera_httpd, &index_uri);
         httpd_register_uri_handler(camera_httpd, &move_uri);
         httpd_register_uri_handler(camera_httpd, &ledon_uri);
         httpd_register_uri_handler(camera_httpd, &ledoff_uri);
+        httpd_register_uri_handler(camera_httpd, &spinleft_uri);
+        httpd_register_uri_handler(camera_httpd, &spinright_uri);
     }
 
     config.server_port += 1;
