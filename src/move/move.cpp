@@ -101,6 +101,8 @@ void spin(int speed, spin_direction_t direction)
 
 /**
  * @brief Get the move params from joystick coordinates
+ *        Constraints:
+ *        left_speed and right_speed values should be in the range [0, 255].
  *
  * @param speed
  * @param turn
