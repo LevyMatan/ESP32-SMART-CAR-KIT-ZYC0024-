@@ -298,6 +298,10 @@ static esp_err_t status_handler(httpd_req_t *req){
 
 static esp_err_t index_handler(httpd_req_t *req){
     httpd_resp_set_type(req, "text/html");
+    // Please notice, `page` is a global variable defined in `html_string.cpp`
+    // The actual content is the HTML found in `joysticks.html`
+    // It then being compressed (minified) and converted to a C string
+    // using the `htmlcompressor` tool
     return httpd_resp_send(req, &page[0], strlen(&page[0]));
 }
 
