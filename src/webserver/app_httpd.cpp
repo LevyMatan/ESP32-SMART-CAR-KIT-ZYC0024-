@@ -420,7 +420,7 @@ void startCameraServer(){
     };
 
     httpd_uri_t spinright_uri = {
-        .uri       = "/spinleft",
+        .uri       = "/spinright",
         .method    = HTTP_GET,
         .handler   = spinright_handler,
         .user_ctx  = NULL
@@ -443,6 +443,7 @@ void startCameraServer(){
         httpd_register_uri_handler(camera_httpd, &ledoff_uri);
         httpd_register_uri_handler(camera_httpd, &spinleft_uri);
         httpd_register_uri_handler(camera_httpd, &spinright_uri);
+        httpd_register_uri_handler(camera_httpd, &stop_uri);
     }
 
     config.server_port += 1;
