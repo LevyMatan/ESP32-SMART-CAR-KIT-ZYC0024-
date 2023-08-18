@@ -1,6 +1,8 @@
 /*
  * @Date: 2020-11-27 11:45:09
  * @Description: ESP32 Camera Surveillance Car
+ *               How to read the file?
+ *
  * @FilePath:
  */
 #include "../move/move.hpp"
@@ -11,10 +13,16 @@
 #include "esp_timer.h"
 #include "img_converters.h"
 
+/*******************************
+ * Global Variables Declarations
+ *******************************/
 extern int gpLed;
 extern String WiFiAddr;
 extern String page;
 
+/*******************************
+ * Type Definitions
+ *******************************/
 typedef struct {
   size_t size;  // number of values used for filtering
   size_t index; // current value index
@@ -35,10 +43,16 @@ static const char *_STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
 static const char *_STREAM_PART =
     "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
+/*******************************
+ * Variable Initializations
+ *******************************/
 static ra_filter_t ra_filter;
 httpd_handle_t stream_httpd = NULL;
 httpd_handle_t camera_httpd = NULL;
 
+/*******************************
+ * Internal Functions
+ *******************************/
 /**
  * @brief Initialize the rolling average filter.
  */
@@ -55,6 +69,13 @@ static ra_filter_t *ra_filter_init(ra_filter_t *filter, size_t sample_size) {
   return filter;
 }
 
+/**
+ * @brief Run the rolling average filter on the value.
+ *
+ * @param filter
+ * @param value
+ * @return int
+ */
 static int ra_filter_run(ra_filter_t *filter, int value) {
   if (!filter->values) {
     return value;
@@ -70,6 +91,15 @@ static int ra_filter_run(ra_filter_t *filter, int value) {
   return filter->sum / filter->count;
 }
 
+/**
+ * @brief Convert the frame to a JPEG image.
+ *
+ * @param arg
+ * @param index
+ * @param data
+ * @param len
+ * @return size_t
+ */
 static size_t jpg_encode_stream(void *arg, size_t index, const void *data,
                                 size_t len) {
   jpg_chunking_t *j = (jpg_chunking_t *)arg;
@@ -82,6 +112,10 @@ static size_t jpg_encode_stream(void *arg, size_t index, const void *data,
   j->len += len;
   return len;
 }
+
+/*******************************
+ * HTTP Server Handlers
+ *******************************/
 
 static esp_err_t capture_handler(httpd_req_t *req) {
   camera_fb_t *fb = NULL;
@@ -407,13 +441,21 @@ static esp_err_t spinleft_handler(httpd_req_t *req) {
 
 static esp_err_t stop_handler(httpd_req_t *req) {
   Serial.println("Stop");
-  move_params_t move_params = {0, L298N::Direction::STOP,
-                               0, L298N::Direction::STOP};
+  move_params_t move_params = {0, L298N::Direction::STOP, 0,
+                               L298N::Direction::STOP};
   wheel_action(&move_params);
   httpd_resp_set_type(req, "text/html");
   return httpd_resp_send(req, "OK", 2);
 }
 
+/*******************************
+ * External Functions
+ *******************************/
+
+/**
+ * @brief Start the web server.
+ *
+ */
 void startCameraServer() {
 
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
