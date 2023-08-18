@@ -20,6 +20,10 @@
 #include "L298N.h"
 #endif
 
+/**
+ * @brief This enum defines the status of the move function.
+ *
+ */
 typedef enum MOVE_status
 {
     MOVE_STATUS_OK_E,
@@ -27,6 +31,7 @@ typedef enum MOVE_status
     MOVE_STATUS_INVALID_RIGHT_SPEED_E,
     MOVE_ERROR_E,
 } MOVE_status_e;
+
 /**
  * @brief This enum defines the direction of the spin.
  *        A spin means the motors are spinning in opposite directions.
@@ -83,5 +88,13 @@ move_params_t get_move_params_from_joystick_coordinates(int x, int y);
  * @param p_move_params
  */
 void wheel_action(move_params_t* p_move_params);
+
+/**
+ * @brief This function validates the move parameters.
+ *
+ * @param p_move_params
+ * @return MOVE_status_e
+ */
+MOVE_status_e verify_move_params(move_params_t* p_move_params);
 
 #endif // __MOVE_H__

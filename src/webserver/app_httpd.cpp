@@ -336,13 +336,14 @@ static esp_err_t move_handler(httpd_req_t *req){
     // Convert the speed and turn values to move params and send them to the wheels
     move_params_t move_params = get_move_params_from_joystick_coordinates(speed, turn);
     DEBUG_print_move_params(&move_params);
-    if(MOVE_STATUS_OK_E == verify_move_params(&move_params))
+    MOVE_status_e e_status = verify_move_params(&move_params);
+    if(MOVE_STATUS_OK_E == e_status)
     {
         wheel_action(&move_params);
     }
     else
     {
-        Serial.println("Invalid move params");
+        Serial.printf("Invalid move params, verify_move_params returned: %d\n", e_status);
         // Flash the LED to indicate invalid move params
         for (int i = 0; i < 5; i++)
         {
