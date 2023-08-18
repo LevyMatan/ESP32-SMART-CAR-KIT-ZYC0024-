@@ -134,10 +134,10 @@ move_params_t get_move_params_from_joystick_coordinates(int speed, int turn)
     speed = (speed > MAX_NORMALIZED_SPEED) ? MAX_NORMALIZED_SPEED : speed;
     turn = (abs(turn) > MAX_NORMALIZED_SPEED) ? MAX_NORMALIZED_SPEED : turn;
     int normolized_speed = speed * MAX_SPEED / MAX_NORMALIZED_SPEED;
-    int normolized_turn = turn * MAX_SPEED / MAX_NORMALIZED_SPEED;
+    int normolized_turn = abs(turn) * MAX_SPEED / MAX_NORMALIZED_SPEED;
 
-    move_params.left_speed = normolized_speed;
-    move_params.right_speed = normolized_speed;
+    move_params.left_speed = normolized_speed; // 96
+    move_params.right_speed = normolized_speed; // 96
     int decreased_speed = ((normolized_speed - normolized_turn) < 0) ? 0 : (normolized_speed - normolized_turn);
     if (turn < 0) // turning left ==> decrease left speed
     {
@@ -149,4 +149,17 @@ move_params_t get_move_params_from_joystick_coordinates(int speed, int turn)
     }
 
     return move_params;
+}
+
+MOVE_status_e verify_move_params(move_params_t* p_move_params)
+{
+    if (p_move_params->left_speed < 0 || p_move_params->left_speed > MAX_SPEED)
+    {
+        return MOVE_STATUS_INVALID_LEFT_SPEED_E;
+    }
+    if (p_move_params->right_speed < 0 || p_move_params->right_speed > MAX_SPEED)
+    {
+        return MOVE_STATUS_INVALID_RIGHT_SPEED_E;
+    }
+    return MOVE_STATUS_OK_E;
 }

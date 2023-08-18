@@ -325,20 +325,34 @@ static esp_err_t move_handler(httpd_req_t *req){
     String data(req->uri);
     // Serial.println(data);
 
-    // Extract the corrdinates X and Y from the string of the form /move?X,Y
+    // Extract the speed and turn values X and Y from the string of the form /move?X,Y
     String turn_str = data.substring(data.indexOf(",") + 1);
-    // Serial.println(str_y);
     data.remove(data.indexOf(","));
     String speed_str = data.substring(data.indexOf("?")+1);
-    // Serial.println(str_x);
-
     int speed = speed_str.toInt();
     int turn = turn_str.toInt();
+    Serial.printf("Speed: %d, Turn: %d\n", speed, turn);
 
-    Serial.printf("X: %d, Y: %d\n", speed, turn);
+    // Convert the speed and turn values to move params and send them to the wheels
     move_params_t move_params = get_move_params_from_joystick_coordinates(speed, turn);
     DEBUG_print_move_params(&move_params);
-    wheel_action(&move_params);
+    if(MOVE_STATUS_OK_E == verify_move_params(&move_params))
+    {
+        wheel_action(&move_params);
+    }
+    else
+    {
+        Serial.println("Invalid move params");
+        // Flash the LED to indicate invalid move params
+        for (int i = 0; i < 5; i++)
+        {
+            digitalWrite(gpLed, HIGH);
+            delay(100);
+            digitalWrite(gpLed, LOW);
+            delay(100);
+        }
+    }
+
     httpd_resp_set_type(req, "text/html");
     return httpd_resp_send(req, "OK", 2);
 }

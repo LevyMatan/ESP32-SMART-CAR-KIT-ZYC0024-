@@ -20,6 +20,13 @@
 #include "L298N.h"
 #endif
 
+typedef enum MOVE_status
+{
+    MOVE_STATUS_OK_E,
+    MOVE_STATUS_INVALID_LEFT_SPEED_E,
+    MOVE_STATUS_INVALID_RIGHT_SPEED_E,
+    MOVE_ERROR_E,
+} MOVE_status_e;
 /**
  * @brief This enum defines the direction of the spin.
  *        A spin means the motors are spinning in opposite directions.
