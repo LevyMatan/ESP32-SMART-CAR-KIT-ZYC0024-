@@ -24,23 +24,22 @@
  * @brief This enum defines the status of the move function.
  *
  */
-typedef enum MOVE_status
-{
-    MOVE_STATUS_OK_E,
-    MOVE_STATUS_INVALID_LEFT_SPEED_E,
-    MOVE_STATUS_INVALID_RIGHT_SPEED_E,
-    MOVE_ERROR_E,
+typedef enum MOVE_status {
+  MOVE_STATUS_OK_E,
+  MOVE_STATUS_INVALID_LEFT_SPEED_E,
+  MOVE_STATUS_INVALID_RIGHT_SPEED_E,
+  MOVE_ERROR_E,
 } MOVE_status_e;
 
 /**
  * @brief This enum defines the direction of the spin.
  *        A spin means the motors are spinning in opposite directions.
- *        While normal turn means the motors are spinning in the same direction with different speeds.
+ *        While normal turn means the motors are spinning in the same direction
+ *        with different speeds.
  */
-typedef enum spin_direction_e
-{
-    RIGHT_E,
-    LEFT_E,
+typedef enum spin_direction_e {
+  RIGHT_E,
+  LEFT_E,
 } spin_direction_t;
 
 /**
@@ -49,13 +48,12 @@ typedef enum spin_direction_e
  *       Speed for either motor is between 0-255.
  *
  */
-typedef struct move_params_s
-{
-    int left_speed;
-    L298N::Direction left_direction;
-    int right_speed;
-    L298N::Direction right_direction;
-    int direction;
+typedef struct move_params_s {
+  int left_speed;
+  L298N::Direction left_direction;
+  int right_speed;
+  L298N::Direction right_direction;
+  int direction;
 } move_params_t;
 
 /**
@@ -63,7 +61,7 @@ typedef struct move_params_s
  *
  * @param p_move_params
  */
-void DEBUG_print_move_params(move_params_t* p_move_params);
+void DEBUG_print_move_params(move_params_t *p_move_params);
 
 /**
  * @brief This function spins the car inplace.
@@ -87,7 +85,7 @@ move_params_t get_move_params_from_joystick_coordinates(int x, int y);
  *
  * @param p_move_params
  */
-void wheel_action(move_params_t* p_move_params);
+void wheel_action(move_params_t *p_move_params);
 
 /**
  * @brief This function validates the move parameters.
@@ -95,6 +93,6 @@ void wheel_action(move_params_t* p_move_params);
  * @param p_move_params
  * @return MOVE_status_e
  */
-MOVE_status_e verify_move_params(move_params_t* p_move_params);
+MOVE_status_e verify_move_params(move_params_t *p_move_params);
 
 #endif // __MOVE_H__
